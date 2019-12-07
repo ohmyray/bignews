@@ -38,6 +38,66 @@
     </div>
   </div>
 
+  <!-- 模态框 -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">网页信息~</h4>
+        </div>
+        <div class="modal-body">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal"> 确 定 </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </body>
+<script src="./libs/http.js"></script>
+<script>
+  $(function () {
+    $('.input_sub').on('click', function (e) {
+      // 大事件登录功能实现
+      let userName = $('.input_txt').val().trim();
+      let password = $('.input_pass').val().trim();
+      // 阻止默认事件执行
+      e.preventDefault();
+      // 判断用户输入是否为空
+      if (userName.length === '' && password.length === '') {
+        $('.modal-body').text('用户名或密码错误呢~');
+        $('#myModal').modal();
+        return;
+      }
+      // 请求数据
+      $.ajax({
+        url: window.BigNew.user_login,
+        type: 'post',
+        data: {
+          username: userName,
+          password: password
+        },
+        dataType: 'json',
+        success(res) {
+          console.log(res);
+          $('.modal-body').text(res.msg);
+          $('#myModal').modal();
+          if (res.code === 200) {
+            // 存储token
+            window.localStorage.setItem('token', res.token)
+            $('#myModal').on('hidden.bs.modal', function (e) {
+              window.location.href = './index.html';
+            })
+          }
+        }
+      })
+    })
+  })
+</script>
 
 </html>
