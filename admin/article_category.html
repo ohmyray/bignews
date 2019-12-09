@@ -31,14 +31,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <!--                     <tr>
                         <td>奇趣事</td>
                         <td>funny</td>
                         <td class="text-center">
                             <a href="javascript:void(0)" data-toggle="modal" class=" btn btn-info btn-xs">编辑</a>
                             <a href="javascript:void(0)" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
+                    </tr> -->
                 </tbody>
                 <tfoot>
                     <tr>
@@ -51,5 +51,181 @@
             </table>
         </div>
     </div>
+
+    <!-- bootstrap 模态框 -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label">Recipient:</label>
+                            <input type="text" class="form-control" id="recipient-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">Message:</label>
+                            <textarea class="form-control" id="message-text"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="areSure">Send message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script type="text/template" id="template">
+{{each data}}
+<tr>
+    <td>{{$value.name}}</td>
+    <td>{{$value.slug}}</td>
+    <td class="text-center">
+        <a href="javascript:void(0)" data-id='{{$value.id}}' data-toggle="modal" class=" btn btn-info btn-xs"
+            data-target="#myModal">编辑</a>
+        <a href="javascript:void(0)" data-id='{{$value.id}}' class="btn btn-danger btn-xs" id='btn-delete'>删除</a>
+    </td>
+</tr>
+{{/each}}
+</script>
+<script src="./libs/http.js"></script>
+<script>
+
+    $(function () {
+        // 拿取分类数据，加入进页面
+        $.get({
+            url: window.BigNew.category_list,
+            success(res) {
+                console.log(res);
+                let tp = template('template', res);
+                console.log(tp);
+                $('tbody').append(tp);
+            }
+        })
+
+        // 记录是那个按钮操作的
+        let btnTarget = null;
+
+        // 新增按钮
+        $('#xinzengfenlei').on('click', function () {
+            console.log(this);
+            // $('#exampleModal').modal();
+            let id = $(this).attr('data-id');
+            btnTarget = $(this);
+            $('#recipient-name').val('');
+            $('#message-text').val('');
+            $('#exampleModal').modal();
+
+        })
+
+        // 编辑按钮
+        $('tbody').on('click', '.btn-info', function () {
+            // console.log(this);
+            // console.log($(this).attr('data-id'));
+            let id = $(this).attr('data-id');
+            btnTarget = $(this);
+
+            // 为模态框赋值
+            process(window.BigNew.category_search, 'get', {
+                id: id
+            }, function (res) {
+                // console.log(res.data[0].name);
+                $('#recipient-name').val(res.data[0].name);
+                $('#message-text').val(res.data[0].slug);
+            })
+            $('#exampleModal').modal();
+        })
+        // 删除按钮
+        $('tbody').on('click', '#btn-delete', function () {
+            let id = $(this).attr('data-id');
+            btnTarget = $(this);
+            $('modal-body>form').hide();
+            $('modal-body').appendTo($(`<p>确定删除吗？</p>`));
+            $('#exampleModal').modal('hide');
+            $('#exampleModal').modal();
+
+        })
+
+        // 封装ajax
+        function process(url, type, data, callback) {
+            $.ajax({
+                url: url,
+                type: type,
+                data: data,
+                success(res) {
+                    callback(res);
+                }
+            })
+        }
+
+        $('#areSure').on('click', function () {
+            // console.log(btnTarget.text());
+            let text = btnTarget.text()
+            let name = $('#recipient-name').val();
+            let slug = $('#message-text').val();
+            // id
+            let id = btnTarget.data('id')
+            // console.log(btnTarget);
+            // console.log(id);
+
+            if (text == '新增分类') {
+                // console.log(111);
+                process(window.BigNew.category_add, 'post', {
+                    // id: id,
+                    name: name,
+                    slug: slug
+                }, function (res) {
+                    // console.log(res);
+                    if (res.code === 201) {
+                        $('#exampleModal').modal('hide');
+                        // console.log(343);
+                    }
+                }) //process end
+
+            } else if (text == '删除') {
+                // console.log(222);
+                process(window.BigNew.category_delete, 'post', {
+                    id: id
+                    // name: name,
+                    // slug: slug
+                }, function (res) {
+                    // console.log(res);
+                    if (res.code === 204) {
+                        $('#exampleModal').modal('hide');
+                        $('modal-body').remove($('p'));
+                        $('modal-body>form').show();
+                        // console.log(343);
+                    }
+                }) //process end
+
+            } else if (text == '编辑') {
+                console.log(333);
+
+                process(window.BigNew.category_edit, 'post', {
+                    id: id,
+                    name: name,
+                    slug: slug
+                }, function (res) {
+                    console.log(res);
+                    if (res.code === 204) {
+                        $('#exampleModal').modal('hide');
+                        // console.log(343);
+                    }
+                }) //process end 
+
+            }
+        })
+
+    }) //end
+
+</script>
 
 </html>

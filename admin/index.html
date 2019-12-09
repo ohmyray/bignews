@@ -70,7 +70,7 @@
             type: 'get',
             dataType: 'json',
             success(res) {
-                console.log(res);
+                // console.log(res);
                 // 将请求的数据动态生成至页面
                 $('.user_info img').attr('src', res.data.userPic);
                 $('.user_info span').html('欢迎&nbsp;&nbsp;' + res.data.nickname + '');
