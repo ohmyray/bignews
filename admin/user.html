@@ -15,6 +15,10 @@
 </head>
 
 <body>
+
+    <!-- 警告框 -->
+    <div class="alert alert-success" role="alert" style="display: none;">...</div>
+
     <div class="container-fluid">
         <div class="common_title">
             用户信息修改
@@ -44,7 +48,7 @@
                     <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
                     <div class="col-sm-10">
                         <img src="images/2.jpg" alt="" class="user_pic">
-                        <input style="display: block" name="userPic" type="file" id="exampleInputFile">
+                        <input style="display: none" name="userPic" type="file" id="exampleInputFile">
                         <!-- 给label标签的for属性赋值,值是input标签的id,那这样的话点击label就相当于点击了input -->
                         <br>
                         <label for="exampleInputFile">
@@ -68,6 +72,68 @@
             </form>
         </div>
     </div>
+
 </body>
+<script src="./libs/http.js"></script>
+<script>
+    $(function () {
+        // 请求数据展示到表单中
+        $.ajax({
+            url: window.BigNew.user_detail,
+            type: 'get',
+            success(res) {
+                if (res.code === 200) {
+                    for (const key in res.data) {
+                        $('input.' + key).val(res.data[key]);
+                    }
+                    $('.user_pic').attr('src', res.data.userPic);
+                }
+            }
+        })
+
+        // 文件域上传用户头像
+        $('#exampleInputFile').on('change', function () {
+            let file = this.files[0];
+
+            let imgSrc = URL.createObjectURL(file);
+            // console.log(imgSrc);
+            $('.user_pic').attr('src', imgSrc);
+        })
+
+        $('.btn-edit').on('click', function (e) {
+            e.preventDefault(); // 阻止submit默认提交事件
+            let form = $('#form')[0];
+            let fd = new FormData(form);
+            console.log(fd);
+            $.ajax({
+                url: window.BigNew.user_edit,
+                type: 'post',
+                data: fd,
+                processData: false,
+                contentType: false,
+                success(res) {
+                    console.log(res);
+                    if (res.code === 200) {
+                        $.ajax({
+                            url: window.BigNew.user_detail,
+                            type: 'get',
+                            success(res) {
+                                if (res.code === 200) {
+                                    parent.$('.user_info img').attr('src', res.data.userPic);
+                                    parent.$('.user_info span').html('欢迎&nbsp;&nbsp;' + res.data.nickname + '');
+                                    parent.$('.user_center_link>img').attr('src', res.data.userPic);
+                                }
+                            }
+                        })
+                        $('.alert').show().text(res.msg);
+                    }
+                }
+            })
+
+
+        })
+
+    })
+</script>
 
 </html>
